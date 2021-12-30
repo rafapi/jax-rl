@@ -163,7 +163,7 @@ def main():
         if len(replay_buffer) > BATCH_SIZE:
             batch = replay_buffer.sample(BATCH_SIZE)
             net_params, opt_state, loss = agent.update_parameters(net_params, target_params, 
-                                                            opt_state, batch)
+                                                                  opt_state, batch)
             losses.append(float(loss))
 
         if idx % 200 == 0:
