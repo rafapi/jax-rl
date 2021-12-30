@@ -1,1 +1,2 @@
-# jax-rl
+# JAX-RL
+* DQN
