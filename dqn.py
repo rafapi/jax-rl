@@ -13,7 +13,6 @@ import random
 from haiku import nets
 # from IPython.display import clear_output
 from collections import deque
-from typing import Callable, Mapping, NamedTuple, Tuple, Sequence
 
 import matplotlib.pyplot as plt
 
@@ -37,8 +36,8 @@ epsilon_final = 0.01
 epsilon_decay = 500
 
 
-def epsilon_by_frame(frame_idx):
-    return epsilon_final + (epsilon_start - epsilon_final) * jnp.exp(-1. * frame_idx / epsilon_decay)
+def epsilon_by_frame(frame_idx: int, epsilon_end: float):
+    return epsilon_end + (epsilon_start - epsilon_end) * jnp.exp(-1. * frame_idx / epsilon_decay)
 
 
 def build_network(num_actions: int) -> hk.Transformed:
@@ -53,7 +52,7 @@ def build_network(num_actions: int) -> hk.Transformed:
     return hk.without_apply_rng(hk.transform(q))
 
 
-class ReplayBuffer(object):
+class ReplayBuffer:
     def __init__(self, capacity):
         self.buffer = deque(maxlen=capacity)
 
@@ -65,8 +64,8 @@ class ReplayBuffer(object):
 
     def sample(self, batch_size):
         state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
-        return (jnp.concatenate(state), jnp.concatenate(next_state), 
-                jnp.asarray(action), jnp.asarray(reward), 
+        return (jnp.concatenate(state), jnp.concatenate(next_state),
+                jnp.asarray(action), jnp.asarray(reward),
                 (1.-jnp.asarray(done, dtype=jnp.float32))*GAMMA)
 
     def __len__(self):
@@ -76,7 +75,7 @@ class ReplayBuffer(object):
 def plot(frame_idx, rewards, losses):
     # clear_output(True)
     plt.close('all')
-    plt.figure(figsize=(20,5))
+    plt.figure(figsize=(20, 5))
     plt.subplot(131)
     plt.title(f'frame {frame_idx}. reward: {np.mean(rewards[-10:])}')
     plt.plot(rewards)
@@ -109,14 +108,14 @@ class DQN:
     def update_parameters(self, net_params, target_params, opt_state, batch):
         """Update network weights wrt Q-learning loss."""
 
-        loss, dloss_dtheta = jax.value_and_grad(self._loss)(net_params, 
+        loss, dloss_dtheta = jax.value_and_grad(self._loss)(net_params,
                                                             target_params, batch)
         updates, opt_state = self._optimizer.update(dloss_dtheta, opt_state)
         net_params = optax.apply_updates(net_params, updates)
         return net_params, opt_state, loss
 
     def _loss(self, net_params, target_params, batch):
-        obs_tm1, obs_t, a_tm1, r_t, discount_t  = batch
+        obs_tm1, obs_t, a_tm1, r_t, discount_t = batch
         q_tm1 = self._network.apply(net_params, obs_tm1)
         q_t_value = self._network.apply(target_params, obs_t)
         q_t_selector = self._network.apply(net_params, obs_t)
@@ -147,7 +146,7 @@ def main():
     state = env.reset()
     print(f"Training agent for {NUM_EPISODES} episodes...")
     for idx in range(1, NUM_EPISODES+1):
-        epsilon = epsilon_by_frame(idx)
+        epsilon = epsilon_by_frame(idx, epsilon_final)
 
         action = agent.select_action(net_params, next(rng), state, epsilon)
         next_state, reward, done, _ = env.step(int(action))
@@ -163,7 +162,7 @@ def main():
 
         if len(replay_buffer) > BATCH_SIZE:
             batch = replay_buffer.sample(BATCH_SIZE)
-            net_params, opt_state, loss = agent.update_parameters(net_params, target_params, 
+            net_params, opt_state, loss = agent.update_parameters(net_params, target_params,
                                                                   opt_state, batch)
             losses.append(float(loss))
 
