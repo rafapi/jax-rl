@@ -52,24 +52,21 @@ def build_network(num_actions: int) -> hk.Transformed:
     return hk.without_apply_rng(hk.transform(q))
 
 
-class ReplayBuffer:
+class ReplayBuffer(deque):
     def __init__(self, capacity):
-        self.buffer = deque(maxlen=capacity)
+        super().__init__(maxlen=capacity)
 
     def push(self, state, action, reward, next_state, done):
         state = jnp.expand_dims(state, 0)
         next_state = jnp.expand_dims(next_state, 0)
 
-        self.buffer.append((state, action, reward, next_state, done))
+        self.append((state, action, reward, next_state, done))
 
     def sample(self, batch_size):
-        state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
+        state, action, reward, next_state, done = zip(*random.sample(self, batch_size))
         return (jnp.concatenate(state), jnp.concatenate(next_state),
                 jnp.asarray(action), jnp.asarray(reward),
                 (1.-jnp.asarray(done, dtype=jnp.float32))*GAMMA)
-
-    def __len__(self):
-        return len(self.buffer)
 
 
 def plot(frame_idx, rewards, losses):
