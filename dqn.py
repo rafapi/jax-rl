@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 from haiku import nets
-from IPython.display import clear_output
+# from IPython.display import clear_output
 from collections import deque
 from typing import Callable, Mapping, NamedTuple, Tuple, Sequence
 
@@ -36,7 +36,9 @@ epsilon_start = 1.0
 epsilon_final = 0.01
 epsilon_decay = 500
 
-epsilon_by_frame = lambda frame_idx: epsilon_final + (epsilon_start - epsilon_final) * jnp.exp(-1. * frame_idx / epsilon_decay)
+
+def epsilon_by_frame(frame_idx):
+    return epsilon_final + (epsilon_start - epsilon_final) * jnp.exp(-1. * frame_idx / epsilon_decay)
 
 
 def build_network(num_actions: int) -> hk.Transformed:
@@ -56,7 +58,7 @@ class ReplayBuffer(object):
         self.buffer = deque(maxlen=capacity)
 
     def push(self, state, action, reward, next_state, done):
-        state      = jnp.expand_dims(state, 0)
+        state = jnp.expand_dims(state, 0)
         next_state = jnp.expand_dims(next_state, 0)
 
         self.buffer.append((state, action, reward, next_state, done))
@@ -72,10 +74,11 @@ class ReplayBuffer(object):
 
 
 def plot(frame_idx, rewards, losses):
-    clear_output(True)
+    # clear_output(True)
+    plt.close('all')
     plt.figure(figsize=(20,5))
     plt.subplot(131)
-    plt.title('frame %s. reward: %s' % (frame_idx, np.mean(rewards[-10:])))
+    plt.title(f'frame {frame_idx}. reward: {np.mean(rewards[-10:])}')
     plt.plot(rewards)
     plt.subplot(132)
     plt.title('loss')
@@ -85,6 +88,7 @@ def plot(frame_idx, rewards, losses):
 
 class DQN:
     """A simple DQN agent."""
+
     def __init__(self, num_actions):
         self._optimizer = optax.adam(LEARNING_RATE)
         self._network = build_network(num_actions)
@@ -124,17 +128,15 @@ class DQN:
 
 
 def main():
-    # Build env
     env_id = "CartPole-v0"
     env = gym.make(env_id)
+
     replay_buffer = ReplayBuffer(REPLAY_CAPACITY)
 
-    #logging
     losses = []
     all_rewards = []
     episode_reward = 0
 
-    # Build and initialize DQN
     num_actions = env.action_space.n
     agent = DQN(num_actions=num_actions)
     sample_input = env.reset()
@@ -147,8 +149,7 @@ def main():
     for idx in range(1, NUM_EPISODES+1):
         epsilon = epsilon_by_frame(idx)
 
-        # Act in the environment and update replay_buffer
-        action = agent.select_action(net_params, next(rng), state, epsilon)  
+        action = agent.select_action(net_params, next(rng), state, epsilon)
         next_state, reward, done, _ = env.step(int(action))
         replay_buffer.push(state, action, reward, next_state, done)
 
@@ -169,7 +170,6 @@ def main():
         if idx % 200 == 0:
             plot(idx, all_rewards, losses)
 
-        # Update Target model parameters
         if idx % 100 == 0:
             target_params = net_params
 
