@@ -1,2 +1,3 @@
 # JAX-RL
 * DQN
+* DDPG
