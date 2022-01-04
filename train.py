@@ -3,9 +3,9 @@ import haiku as hk
 
 import gym
 
-from memory import ReplayBuffer
-from agent import DQN
-from utils import epsilon_by_frame, plot
+from src.memory import ReplayBuffer
+from src.agent import DQN
+from src.utils import epsilon_by_frame, plot
 # from IPython.display import clear_output
 
 

@@ -4,7 +4,7 @@ import rlax
 
 from jax import vmap
 
-from network import build_network
+from src.network import build_network
 
 
 class DQN:
