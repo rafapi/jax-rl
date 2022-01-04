@@ -2,6 +2,8 @@ import numpy as np
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
+# from IPython.display import clear_output
+
 
 COLOR = 'white'
 plt.rcParams['text.color'] = COLOR
