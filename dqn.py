@@ -91,7 +91,7 @@ class DQN:
         self.select_action = jax.jit(self.select_action)
         self.update_parameters = jax.jit(self.update_parameters)
 
-    def initial_params(self, sample_input, rng):
+    def param_init(self, sample_input, rng):
         net_params = self._network.init(next(rng), sample_input)
         opt_state = self._optimizer.init(net_params)
         return net_params, opt_state
@@ -137,7 +137,7 @@ def main():
     agent = DQN(num_actions=num_actions)
     sample_input = env.reset()
     rng = hk.PRNGSequence(jax.random.PRNGKey(SEED))
-    net_params, opt_state = agent.initial_params(sample_input, rng)
+    net_params, opt_state = agent.param_init(sample_input, rng)
     target_params = net_params
 
     state = env.reset()
