@@ -2,6 +2,7 @@ import jax
 import haiku as hk
 
 import gym
+import numpy
 import hydra
 
 from omegaconf import DictConfig
@@ -53,7 +54,8 @@ def main(config: DictConfig):
             losses.append(float(loss))
 
         if idx % 200 == 0:
-            plot(idx, all_rewards, losses)
+            # plot(idx, all_rewards, losses)
+            print(f'Episode: {idx} \t Rewards: {numpy.mean(all_rewards)} \t Loss: {loss}')
 
         if idx % 100 == 0:
             target_params = net_params
